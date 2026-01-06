@@ -1,0 +1,47 @@
+const Redis = require("ioredis");
+
+let redisErrorLogged = false;
+
+const redis = new Redis({
+  host: process.env.REDIS_HOST || "127.0.0.1",
+  port: process.env.REDIS_PORT || 6379,
+  password: process.env.REDIS_PASSWORD || undefined,
+
+  retryStrategy(times) {
+    // retry after 2 seconds
+    return 2000;
+  },
+});
+
+redis.on("connect", () => {
+  console.log("Redis connected");
+  redisErrorLogged = false;
+});
+
+redis.on("error", (err) => {
+  if (!redisErrorLogged) {
+    console.error("Redis connection failed:", err.message);
+    redisErrorLogged = true;
+  }
+});
+
+module.exports = redis;
+
+
+// const Redis = require("ioredis");
+
+// const redis = new Redis({
+//   host: process.env.REDIS_HOST || "127.0.0.1",
+//   port: process.env.REDIS_PORT || 6379,
+//   password: process.env.REDIS_PASSWORD || undefined,
+// });
+
+// redis.on("connect", () => {
+//   console.log("Redis connected");
+// });
+
+// redis.on("error", (err) => {
+//   console.log("Redis error:", err);
+// });
+
+// module.exports = redis;
