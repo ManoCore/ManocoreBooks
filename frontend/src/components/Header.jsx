@@ -16,6 +16,8 @@ import {
   MagnifyingGlassIcon // Added for the search input icon
 } from "@heroicons/react/24/outline";
 import { FiPlusCircle, FiSend } from "react-icons/fi";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../features/auth/authSlice";
 
 // ✅ Fix your image imports (Ensure these paths are correct in your project)
 import manocoreBooksLogo from "../assets/manocore_books_logo_final_without_bg.png.png";
@@ -49,7 +51,7 @@ const ProfileSettingsModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-   <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+   <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
     
   <motion.div
     initial={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -251,7 +253,7 @@ const ProfileSettingsModal = ({ isOpen, onClose }) => {
                     onChange={handleChange} 
                     className="sr-only peer" 
                   />
-                  <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:h-5 after:w-5 after:bg-white after:rounded-full after:left-[2px] after:top-[2px] peer-checked:after:translate-x-full after:transition-all"></div>
+                  <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:h-5 after:w-5 after:bg-white after:rounded-full after:left-0.5 after:top-0.5 peer-checked:after:translate-x-full after:transition-all"></div>
                 </label>
               </div>
 
@@ -275,7 +277,7 @@ const ProfileSettingsModal = ({ isOpen, onClose }) => {
                     onChange={handleChange}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-purple-600 after:content-[''] after:absolute after:h-5 after:w-5 after:bg-white after:rounded-full after:left-[2px] after:top-[2px] peer-checked:after:translate-x-full after:transition-all"></div>
+                  <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-purple-600 after:content-[''] after:absolute after:h-5 after:w-5 after:bg-white after:rounded-full after:left-0.5 after:top-0.5 peer-checked:after:translate-x-full after:transition-all"></div>
                 </label>
               </div>
 
@@ -295,7 +297,7 @@ const ProfileSettingsModal = ({ isOpen, onClose }) => {
 
         <button
           onClick={() => { alert("Settings Saved!"); onClose(); }}
-          className="px-5 py-2 bg-gradient-to-br from-purple-600 via-blue-500 to-indigo-600 text-black rounded-lg font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
+          className="px-5 py-2 bg-linear-to-br from-purple-600 via-blue-500 to-indigo-600 text-black rounded-lg font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
         >
           Save Changes
         </button>
@@ -311,6 +313,8 @@ const ProfileSettingsModal = ({ isOpen, onClose }) => {
 // --- MAIN HEADER COMPONENT ---
 const Header = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+const { user } = useSelector((state) => state.auth);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -377,6 +381,13 @@ const Header = () => {
     setShowProfileModal(true);
   };
 
+
+  const handleLogout = () => {
+  dispatch(logout());      // Redux clears auth state
+  setMenuOpen(false);      // Close dropdown
+  navigate("/login");      // Redirect
+};
+
   return (
     <div className="rounded-xl overflow-hidden">
       {/* RENDER MODAL */}
@@ -387,7 +398,7 @@ const Header = () => {
       </AnimatePresence>
 
       {/* HEADER */}
-      <div className="fixed top-0 left-0 w-full z-50 bg-gradient-to-r 
+      <div className="fixed top-0 left-0 w-full z-50 bg-linear-to-r 
         from-gray-100 via-gray-200 to-gray-100 text-gray-900 py-3 px-8 
         shadow-lg backdrop-blur-md border-b border-gray-300">
 
@@ -425,7 +436,7 @@ const Header = () => {
             />
 
             {/* NOTIFICATION */}
-            <button className="relative p-2 rounded-full bg-gradient-to-br 
+            <button className="relative p-2 rounded-full bg-linear-to-br 
               from-gray-100 to-gray-200 hover:from-white hover:to-gray-100 
               shadow-sm hover:shadow-md transition-all duration-300 
               transform hover:scale-110"
@@ -439,7 +450,7 @@ const Header = () => {
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className={`p-2 rounded-full bg-gradient-to-br from-gray-100 
+                className={`p-2 rounded-full bg-linear-to-br from-gray-100 
                   to-blue-500 hover:from-white hover:to-blue-700 shadow-sm 
                   hover:shadow-md transition-all duration-300 transform ${
                     menuOpen ? "scale-110 rotate-6" : "hover:scale-110"
@@ -452,16 +463,20 @@ const Header = () => {
               <div
                 className={`absolute right-0 mt-3 w-56 bg-white border 
                   border-gray-300 rounded-xl shadow-xl overflow-hidden 
-                  transition-all duration-300 origin-top-right z-[55] ${
+                  transition-all duration-300 origin-top-right z-55 ${
                     menuOpen
                       ? "opacity-100 translate-y-0 scale-100"
                       : "opacity-0 -translate-y-2 scale-95 pointer-events-none"
                   }`}
               >
-                <div className="px-4 py-3 bg-gradient-to-br 
+                <div className="px-4 py-3 bg-linear-to-br 
                     from-blue-100 via-indigo-300 to-purple-500 border-b">
-                  <p className="text-sm font-semibold text-gray-800">Gladson</p>
-                  <p className="text-xs text-gray-700">gladsonm934@gmail.com</p>
+                  <p className="text-sm font-semibold text-gray-800">
+  {user?.fullName || "User"}
+</p>
+<p className="text-xs text-gray-700">
+  {user?.email}
+</p>
                 </div>
 
                 <ul className="py-1 text-sm text-gray-700">
@@ -485,13 +500,13 @@ const Header = () => {
                   </li>
 
                   <li
-                    onClick={() => { navigate("/login"); setMenuOpen(false); }}
-                    className="px-4 py-2 hover:bg-red-100 text-red-600 
-                      border-t border-gray-100 flex items-center gap-2 cursor-pointer"
-                  >
-                    <ArrowRightOnRectangleIcon className="h-4 w-4" />
-                    Logout
-                  </li>
+  onClick={handleLogout}
+  className="px-4 py-2 hover:bg-red-100 text-red-600 
+    border-t border-gray-100 flex items-center gap-2 cursor-pointer"
+>
+  <ArrowRightOnRectangleIcon className="h-4 w-4" />
+  Logout
+</li>
                 </ul>
               </div>
             </div>
@@ -507,11 +522,11 @@ const Header = () => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.95 }}
               transition={{ type: "spring", stiffness: 200, damping: 20 }}
-              className="fixed top-[5.5rem] right-10 z-[40] flex flex-col items-end"
+              className="fixed top-22 right-10 z-40 flex flex-col items-end"
             >
               <div className="relative group">
                 {/* GLOW EFFECT BEHIND */}
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
+                <div className="absolute -inset-0.5 bg-linear-to-r from-blue-400 to-purple-500 rounded-full blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
 
                 <motion.div
                   className="relative flex items-center w-[500px] h-[60px] px-5 
@@ -560,7 +575,7 @@ const Header = () => {
                   </div>
 
                   {/* DIVIDER */}
-                  <div className="h-6 w-[1px] bg-gray-300 mx-3"></div>
+                  <div className="h-6 w-px bg-gray-300 mx-3"></div>
 
                   {/* SEARCH INPUT AREA */}
                   <div className="flex-1 relative h-full flex items-center">
@@ -593,7 +608,7 @@ const Header = () => {
                   <motion.button
                     whileHover={{ scale: 1.05, rotate: -10 }}
                     whileTap={{ scale: 0.95 }}
-                    className="ml-2 p-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 
+                    className="ml-2 p-2.5 bg-linear-to-r from-blue-600 to-indigo-600 
                     text-white rounded-full shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 
                     transition-all duration-300 flex items-center justify-center"
                   >

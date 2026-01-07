@@ -3,10 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, CheckCircle } from 'lucide-react';
 import DeskImage from '../assets/signupimg.jpg';
 import booklogo from '../assets/manocore_book_logo.png';
+import { useDispatch, useSelector } from "react-redux";
+import { login } from "../features/auth/authSlice";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   
+  const dispatch = useDispatch();
+const { isLoading, error } = useSelector((state) => state.auth);
   // --- State Management ---
   const [formData, setFormData] = useState({
     email: '',
@@ -15,8 +19,6 @@ export default function LoginPage() {
   });
   
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
 
   // --- Handlers ---
   const handleChange = (e) => {
@@ -29,52 +31,26 @@ export default function LoginPage() {
     if (error) setError('');
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    // 1. Basic Validation
-    if (!formData.email || !formData.password) {
-      setError('Please fill in all required fields.');
-      setIsLoading(false);
-      return;
-    }
+  if (!formData.email || !formData.password) {
+    return;
+  }
 
-    try {
-      // 2. SIMULATE API CALL (Replace this with your actual fetch/axios call)
-      // Example: const response = await axios.post('/api/login', formData);
-      
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Fake 1.5s delay
+  const result = await dispatch(
+    login({
+      email: formData.email,
+      password: formData.password,
+    })
+  );
 
-      // 3. MOCK VALIDATION LOGIC
-      // In a real app, the backend verifies the hashed password.
-      if (formData.email === "admin@manocore.com" && formData.password === "password123") {
-        
-        // 4. RETURN JWT & SESSION HANDLING
-        const fakeJwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.fake-token-content";
-        
-        // Store Token
-        if (formData.rememberMe) {
-            localStorage.setItem('token', fakeJwt);
-            localStorage.setItem('user', JSON.stringify({ email: formData.email, role: 'admin' }));
-        } else {
-            sessionStorage.setItem('token', fakeJwt);
-        }
+  // Navigate only if login succeeds
+  if (login.fulfilled.match(result)) {
+    navigate("/dashboard");
+  }
+};
 
-        // 5. REDIRECT TO DASHBOARD
-        navigate('/dashboard');
-        
-      } else {
-        throw new Error("Invalid email or password");
-      }
-
-    } catch (err) {
-      setError(err.message || "Authentication failed");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex bg-white font-sans selection:bg-indigo-100">
@@ -91,7 +67,7 @@ export default function LoginPage() {
          className="w-full h-full object-cover opacity-30 mix-blend-overlay"
        />
        {/* Gradient Overlay: Ensures text at the bottom is readable */}
-       <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent" />
+       <div className="absolute inset-0 bg-linear-to-t from-slate-900 via-slate-900/20 to-transparent" />
      </div>
    
      {/* Animated Background Blobs */}
@@ -218,29 +194,28 @@ export default function LoginPage() {
 
               {/* Error Message Display */}
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg flex items-center">
-                   <span className="font-medium mr-1">Error:</span> {error}
-                </div>
-              )}
-
+  <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg">
+    {error}
+  </div>
+)}
               {/* Submit Button */}
               <div>
                 <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? (
-                    <div className="flex items-center">
-                       <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
-                       Authenticating...
-                    </div>
-                  ) : (
-                    <div className="flex items-center">
-                       Sign in <ArrowRight className="ml-2 h-4 w-4" />
-                    </div>
-                  )}
-                </button>
+  type="submit"
+  disabled={isLoading}
+  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-70"
+>
+  {isLoading ? (
+    <div className="flex items-center">
+      <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
+      Authenticating...
+    </div>
+  ) : (
+    <div className="flex items-center">
+      Sign in <ArrowRight className="ml-2 h-4 w-4" />
+    </div>
+  )}
+</button>
               </div>
             </form>
 

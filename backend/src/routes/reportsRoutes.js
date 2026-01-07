@@ -1,7 +1,7 @@
 const express = require("express");
 const { protect } = require("../middleware/auth");
 const Transaction = require("../models/Transaction");
-const { Invoice } = require("../models/Invoice");
+const Invoice  = require("../models/Invoice");
 const Client = require("../models/Client");
 const json2csv = require("json2csv").parse;
 const PDFDocument = require("pdfkit");

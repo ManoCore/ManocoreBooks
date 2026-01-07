@@ -1,8 +1,8 @@
 const express = require("express");
 const { protect, allow } = require("../middleware/auth");
-const { Invoice } = require("../models/Invoice");
-const Client = require("../models/Client");
 
+const Client = require("../models/Client");
+const Invoice = require("../models/Invoice");
 const router = express.Router();
 
 //invoice generater 

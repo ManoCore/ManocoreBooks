@@ -99,7 +99,7 @@ export default function Navbar() {
               href="#"
               className="transition-transform duration-200 transform hover:scale-110 block"
             >
-              <img src="/AI-LOGO.svg" alt="AI Products" className="w-[20px]" />
+              <img src="/AI-LOGO.svg" alt="AI Products" className="w-5" />
             </a>
 
             {/* Dropdown Menu */}

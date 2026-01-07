@@ -6,6 +6,10 @@ import {
 } from 'lucide-react';
 import DeskImage from '../assets/bg_logo.jpg';
 import booklogo from '../assets/manocore_book_logo.png';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from "react-redux";
+import { signup } from "../features/auth/authSlice";
+
 
 // --- Configuration & Data ---
 const COUNTRY_DATA = {
@@ -118,16 +122,19 @@ const InputField = ({
 // --- Main Component ---
 
 export default function SignupPage() {
+  const navigate=useNavigate();
+  const dispatch = useDispatch();
+
+  const { isLoading, error } = useSelector((state) => state.auth);
   const [formData, setFormData] = useState({
-    companyName: '', contactName: '', email: '', password: '', confirmPassword: '',
+    companyName: '', fullName: '', email: '', password: '', confirmPassword: '',
     country: '', state: '', currency: '', phone: '', timezone: '', taxId: '',
-    businessType: '', termsAccepted: false
+    businessType: '', acceptedTerms: false
   });
 
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [availableStates, setAvailableStates] = useState([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeSection, setActiveSection] = useState(1); 
 
   // --- Logic Handlers ---
@@ -160,7 +167,7 @@ export default function SignupPage() {
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
     
     if (!formData.companyName.trim()) newErrors.companyName = "Company Name is required";
-    if (!formData.contactName.trim()) newErrors.contactName = "Full Name is required";
+    if (!formData.fullName.trim()) newErrors.fullName = "Full Name is required";
     if (!formData.email.trim()) newErrors.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Invalid email format";
 
@@ -170,25 +177,29 @@ export default function SignupPage() {
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
     if (!formData.country) newErrors.country = "Country is required";
     if (availableStates.length > 0 && !formData.state) newErrors.state = "State is required";
-    if (!formData.termsAccepted) newErrors.termsAccepted = "You must accept the terms";
+    if (!formData.acceptedTerms) newErrors.acceptedTerms = "You must accept the terms";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (validateForm()) {
-      setIsSubmitting(true);
-      setTimeout(() => {
-        setIsSubmitting(false);
-        console.log("Payload:", formData);
-        alert("Success! Redirecting to onboarding...");
-      }, 1500);
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (!validateForm()) {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
+  const result = await dispatch(signup(formData));
+
+  if (signup.fulfilled.match(result)) {
+    navigate("/dashboard"); // or /onboarding
+  }
+};
+
+
 
   return (
     <div className="min-h-screen flex bg-white font-sans selection:bg-indigo-100">
@@ -205,7 +216,7 @@ export default function SignupPage() {
       className="w-full h-full object-cover opacity-30 mix-blend-overlay"
     />
     {/* Gradient Overlay: Ensures text at the bottom is readable */}
-    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent" />
+    <div className="absolute inset-0 bg-linear-to-t from-slate-900 via-slate-900/20 to-transparent" />
   </div>
 
   {/* Animated Background Blobs */}
@@ -266,6 +277,12 @@ export default function SignupPage() {
           </h2>
         
       </div>
+      {error && (
+  <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-600 text-sm flex items-center gap-2">
+    <AlertCircle size={14} />
+    {error}
+  </div>
+)}
 
       <form onSubmit={handleSubmit} className="space-y-2">
         
@@ -279,13 +296,13 @@ export default function SignupPage() {
         >
           <InputField 
             label="Full Name" 
-            name="contactName" 
-            value={formData.contactName} 
+            name="fullName" 
+            value={formData.fullName} 
             onChange={handleChange}
             icon={User} 
             required 
             placeholder="John Doe"
-            error={errors.contactName} 
+            error={errors.fullName} 
           />
           <InputField 
             label="Work Email" 
@@ -429,9 +446,9 @@ export default function SignupPage() {
           <div className="flex items-center mb-6">
             <input
               id="terms"
-              name="termsAccepted"
+              name="acceptedTerms"
               type="checkbox"
-              checked={formData.termsAccepted}
+              checked={formData.acceptedTerms}
               onChange={handleChange}
               className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded cursor-pointer"
             />
@@ -439,25 +456,30 @@ export default function SignupPage() {
               I agree to the <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500 underline decoration-indigo-200 underline-offset-2">Terms</a> and <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500 underline decoration-indigo-200 underline-offset-2">Privacy Policy</a>
             </label>
           </div>
-          {errors.termsAccepted && <p className="text-xs text-red-500 mb-4 -mt-4">{errors.termsAccepted}</p>}
+          {errors.acceptedTerms && <p className="text-xs text-red-500 mb-4 -mt-4">{errors.acceptedTerms}</p>}
 
           <button
-            type="submit"
-            disabled={isSubmitting}
-            className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl text-sm font-bold text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-all shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden"
-          >
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[100%] group-hover:animate-shine" />
-            {isSubmitting ? 'Setting up environment...' : (
-              <span className="flex items-center gap-2">
-                Create Account <ArrowRight size={16} />
-              </span>
-            )}
-          </button>
+  type="submit"
+  disabled={isLoading}
+  className="group relative w-full flex justify-center py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-gray-900 hover:bg-gray-800 disabled:opacity-70"
+>
+  {isLoading ? "Creating account..." : (
+    <span className="flex items-center gap-2">
+      Create Account <ArrowRight size={16} />
+    </span>
+  )}
+</button>
           
           <p className="mt-6 text-center text-sm text-gray-500">
-            Already have an account? <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500">Log in</a>
+            Already have an account? <span onClick={() => navigate("/login")} className="font-semibold text-indigo-600 hover:text-indigo-500 cursor-pointer">Log in</span>
           </p>
         </div>
+        {errors.form && (
+  <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700 flex items-center gap-2">
+    <AlertCircle size={16} />
+    {errors.form}
+  </div>
+)}
 
       </form>
     </div>

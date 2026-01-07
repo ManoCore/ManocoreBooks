@@ -1,23 +1,17 @@
 const express = require("express");
 const { protect, allow } = require("../middleware/auth");
 const Client = require("../models/Client");
-const { Invoice } = require("../models/Invoice");
+const  Invoice = require("../models/Invoice");
 const json2csv = require("json2csv").parse;
 const PDFDocument = require("pdfkit");
 const router = express.Router();
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
-const sendInvoiceEmail = require("../utils/sendEmail"); 
+const sendEmail = require("../utils/sendEmail"); 
 //create
-router.post(
-  "/",
-  protect,
-  allow("createInvoice"),
-  async (req, res) => {
+router.post("/",protect,allow("createInvoice"),async (req, res) => {
     try {
-      /* ------------------------------------
-         1. Create Client
-      ------------------------------------ */
+      
       const client = new Client({
         ...req.body,
         organizationId: req.user.organizationId,
@@ -28,9 +22,7 @@ router.post(
 
       let inviteStatus = "not_sent";
 
-      /* ------------------------------------
-         2. Invite client if email exists
-      ------------------------------------ */
+    
       if (client.email) {
         const normalizedEmail = client.email.toLowerCase().trim();
 
@@ -63,7 +55,7 @@ router.post(
 
           const setupLink = `${process.env.FRONTEND_URL}/set-password?token=${token}`;
 
-          await sendInvoiceEmail({
+          await sendEmail({
             email: user.email,
             subject: "Set up your Manocore Books account",
             message: `
@@ -84,9 +76,6 @@ router.post(
         }
       }
 
-      /* ------------------------------------
-         3. Response
-      ------------------------------------ */
       res.status(201).json({
         message: "Client created successfully",
         client,

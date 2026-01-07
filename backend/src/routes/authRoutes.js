@@ -8,7 +8,7 @@ const {
   sendOtpHandler,
   verifyOtpHandler,
 } = require("../controllers/otpController");
-const sendInvoiceEmail =require( "../utils/sendEmail");
+const sendEmail =require( "../utils/sendEmail");
 
 
 const router = express.Router();
@@ -232,7 +232,7 @@ router.post("/send-set-password-link", async (req, res) => {
 
     const setupLink = `${process.env.FRONTEND_URL}/set-password?token=${token}`;
 
-    await sendInvoiceEmail({
+    await sendEmail({
       email: user.email,
       subject: "Set up your Manocore Books Account",
       message: `

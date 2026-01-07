@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer");
 
-const sendInvoiceEmail = async (options) => {
+const sendEmail = async (options) => {
   try {
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
@@ -31,4 +31,4 @@ const sendInvoiceEmail = async (options) => {
 
 
 
-module.exports = sendInvoiceEmail;
+module.exports = sendEmail;

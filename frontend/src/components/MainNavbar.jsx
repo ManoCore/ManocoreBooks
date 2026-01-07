@@ -12,7 +12,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="w-full fixed top-0 z-[1000] bg-black backdrop-blur-xl border-b border-white/10 shadow-lg py-3">
+    <nav className="w-full fixed top-0 z-1000 bg-black backdrop-blur-xl border-b border-white/10 shadow-lg py-3">
       <div className="max-w-[1600px] mx-auto flex items-center justify-between px-8">
 
         {/* ✅ Logo */}
@@ -33,8 +33,8 @@ export default function Navbar() {
           <a
             onClick={handleNavigation}
             className="cursor-pointer transition-all hover:text-white 
-               relative before:absolute before:bottom-0 before:left-0 before:h-[2px] before:w-0 
-               before:bg-gradient-to-r before:from-indigo-500 before:to-pink-500 
+               relative before:absolute before:bottom-0 before:left-0 before:h-0.5 before:w-0 
+               before:bg-linear-to-r before:from-indigo-500 before:to-pink-500 
                before:transition-all before:duration-300 hover:before:w-full"
           >
             Home
@@ -42,8 +42,8 @@ export default function Navbar() {
           {/* ✅ Services */}
           <div className="relative group">
             <a className="cursor-pointer transition-all hover:text-white 
-               relative before:absolute before:bottom-0 before:left-0 before:h-[2px] before:w-0 
-               before:bg-gradient-to-r before:from-indigo-500 before:to-pink-500 
+               relative before:absolute before:bottom-0 before:left-0 before:h-0.5 before:w-0 
+               before:bg-linear-to-r before:from-indigo-500 before:to-pink-500 
                before:transition-all before:duration-300 hover:before:w-full">Services</a>
 
             <div className="absolute left-1/2 -translate-x-1/2 mt-6 w-48 bg-[#1d1d21] border border-white/10 rounded-md shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
@@ -56,8 +56,8 @@ export default function Navbar() {
             <a
             onClick={handleNavigation}
             className="cursor-pointer transition-all hover:text-white 
-               relative before:absolute before:bottom-0 before:left-0 before:h-[2px] before:w-0 
-               before:bg-gradient-to-r before:from-indigo-500 before:to-pink-500 
+               relative before:absolute before:bottom-0 before:left-0 before:h-0.5 before:w-0 
+               before:bg-linear-to-r before:from-indigo-500 before:to-pink-500 
                before:transition-all before:duration-300 hover:before:w-full"
           >
             Features
@@ -72,23 +72,23 @@ export default function Navbar() {
 </div>
 
           <a className="cursor-pointer transition-all hover:text-white 
-               relative before:absolute before:bottom-0 before:left-0 before:h-[2px] before:w-0 
-               before:bg-gradient-to-r before:from-indigo-500 before:to-pink-500 
+               relative before:absolute before:bottom-0 before:left-0 before:h-0.5 before:w-0 
+               before:bg-linear-to-r before:from-indigo-500 before:to-pink-500 
                before:transition-all before:duration-300 hover:before:w-full">Blog</a>
           <a className="cursor-pointer transition-all hover:text-white 
-               relative before:absolute before:bottom-0 before:left-0 before:h-[2px] before:w-0 
-               before:bg-gradient-to-r before:from-indigo-500 before:to-pink-500 
+               relative before:absolute before:bottom-0 before:left-0 before:h-0.5 before:w-0 
+               before:bg-linear-to-r before:from-indigo-500 before:to-pink-500 
                before:transition-all before:duration-300 hover:before:w-full">Company</a>
         </div>
 
         {/* ✅ Desktop Buttons */}
         <div className="hidden md:flex items-center space-x-4">
  <button
-      onClick={() => navigate("/LoginPage")}
+      onClick={() => navigate("/login")}
       className="
         px-5 py-2 rounded-full font-medium
         text-gray-200 bg-[#4e4e7b]
-        hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-600
+        hover:bg-linear-to-r hover:from-indigo-500 hover:to-purple-600
         hover:text-white transition-all duration-300 shadow-lg shadow-indigo-500/10
       "
     >
@@ -99,14 +99,14 @@ export default function Navbar() {
       className="
         px-5 py-2 rounded-full font-medium
         text-gray-200 bg-[#4e4e7b]
-        hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-600
+        hover:bg-linear-to-r hover:from-indigo-500 hover:to-purple-600
         hover:text-white transition-all duration-300 shadow-lg shadow-indigo-500/10
       "
     >
       SignUp
     </button>
 
-          <button className=" cursor-pointer bg-gradient-to-br from-indigo-500  to-purple-800 hover:bg-indigo-500 px-5 py-2 rounded-full text-white text-sm font-bold shadow-lg transition-all">
+          <button className=" cursor-pointer bg-linear-to-br from-indigo-500  to-purple-800 hover:bg-indigo-500 px-5 py-2 rounded-full text-white text-sm font-bold shadow-lg transition-all">
             Book a Call
           </button>
         </div>
