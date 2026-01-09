@@ -97,6 +97,7 @@ router.get("/transactions", protect, async (req, res) => {
 
 // Create transaction
 router.post("/transactions", protect, allow("createInvoice"), async (req, res) => {
+
   try {
     const transaction = new Transaction({
       ...req.body,

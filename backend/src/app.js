@@ -16,14 +16,14 @@ const startRecurringCron = require("./scheduler/recurringCron");
 const bankAccountRoutes = require("./routes/bankAccountRoutes");
 const roleRoutes = require("./routes/roleRoutes");
 const profileRoutes = require("./routes/profileRoutes");
-
-
+const companyRoutes = require("./routes/companyRoutes");
 
 
 
 const app = express();
 app.use(express.json());
 app.use(cors());
+app.use("/uploads", express.static("uploads"));
 
 mongoose
   .connect(process.env.DB)
@@ -32,13 +32,14 @@ mongoose
 
 app.use("/auth", authRoutes);
 app.use("/clients", clientRoutes);
-app.use("/", invoiceRoutes);
 app.use("/dashboard", dashboardRoutes);
 app.use("/finance", financeRoutes);
 app.use("/reports", reportsRoutes);
-app.use("/companies", bankAccountRoutes);
-app.use("/companies", roleRoutes);
+app.use("/bank", bankAccountRoutes);
+app.use("/role", roleRoutes);
 app.use("/profile", profileRoutes);
+app.use("/company",companyRoutes);
+app.use("/", invoiceRoutes);
 
 startRecurringCron();
 

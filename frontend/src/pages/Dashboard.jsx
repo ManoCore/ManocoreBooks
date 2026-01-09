@@ -1,3 +1,10 @@
+
+
+
+
+
+
+
 import React from "react";
 import Layout from "../components/Layout";
 import StatCard from "../components/StatCard"; // Assuming this component exists
@@ -459,19 +466,19 @@ const Dashboard = () => {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <button className="flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500
+            <button className="flex items-center justify-center gap-2 p-4 bg-linear-to-r from-blue-500 via-indigo-500 to-purple-500
  hover:from-blue-400 hover:via-indigo-400 hover:to-purple-400
            transition-all duration-300 rounded-xl border border-blue-200 text-black font-medium">
               <Plus size={18} /> Create Invoice
             </button>
 
-            <button className="flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500
+            <button className="flex items-center justify-center gap-2 p-4 bg-linear-to-r from-blue-500 via-indigo-500 to-purple-500
  hover:from-blue-400 hover:via-indigo-400 hover:to-purple-400
            transition-all duration-300 rounded-xl border border-purple-200 text-black font-medium">
               <Plus size={18} /> Add Client
             </button>
 
-            <button className="flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500
+            <button className="flex items-center justify-center gap-2 p-4 bg-linear-to-r from-blue-500 via-indigo-500 to-purple-500
  hover:from-blue-400 hover:via-indigo-400 hover:to-purple-400
            transition-all duration-300 rounded-xl border border-green-200 text-black font-medium">
               <Plus size={18} /> Add Bank Account
@@ -487,196 +494,417 @@ export default Dashboard;
 
 
 
-
-// import React from "react";
+// import React, { useEffect, useState, useMemo, memo } from "react";
 // import Layout from "../components/Layout";
-// import StatCard from "../components/StatCard";
+// import {getDashboardStats} from "../api/dashboard.api.js";
 // import {
 //   CurrencyDollarIcon,
-//   ArrowUpOnSquareIcon,
 //   DocumentTextIcon,
-//   BookmarkIcon,
-// } from "@heroicons/react/24/solid";
-// import { TrendingUp } from "lucide-react";
+//   ClockIcon,
+//   CheckCircleIcon,
+//   ArrowTrendingUpIcon,
+//   EllipsisHorizontalIcon,
+// } from "@heroicons/react/24/outline";
 // import {
-//   BarChart,
-//   Bar,
+//   AreaChart,
+//   Area,
 //   XAxis,
 //   YAxis,
 //   CartesianGrid,
 //   Tooltip,
 //   ResponsiveContainer,
-//   Legend,
+//   PieChart,
+//   Pie,
+//   Cell,
 // } from "recharts";
 
-// const statsData = [
-//   {
-//     title: "Total Revenue",
-//     value: "$1.2M",
-//     percentage: "+12.5%",
-//     icon: CurrencyDollarIcon,
-//     color: "bg-orange-500",
-//     trend: "positive",
-//   },
-//   {
-//     title: "Outstanding",
-//     value: "$125K",
-//     percentage: "-5.3%",
-//     icon: ArrowUpOnSquareIcon,
-//     color: "bg-blue-500",
-//     trend: "negative",
-//   },
-//   {
-//     title: "Paid Invoices",
-//     value: "97",
-//     percentage: "+8.1%",
-//     icon: DocumentTextIcon,
-//     color: "bg-green-500",
-//     trend: "positive",
-//   },
-//   {
-//     title: "Pending",
-//     value: "19",
-//     percentage: "+2%",
-//     icon: BookmarkIcon,
-//     color: "bg-purple-500",
-//     trend: "positive",
-//   },
-// ];
+// /* -------------------- UTILS & CONFIG -------------------- */
+// const COLORS = ["#10B981", "#F59E0B", "#EF4444"]; // Emerald, Amber, Red
 
-// // --- Vertical Revenue Chart Data (Jan–Dec) ---
-// const revenueTrendData = [
-//   { month: "Jan", value: 1200 },
-//   { month: "Feb", value: 1390 },
-//   { month: "Mar", value: 980 },
-//   { month: "Apr", value: 1500 },
-//   { month: "May", value: 1800 },
-//   { month: "Jun", value: 1600 },
-//   { month: "Jul", value: 1700 },
-//   { month: "Aug", value: 1450 },
-//   { month: "Sep", value: 1550 },
-//   { month: "Oct", value: 1900 },
-//   { month: "Nov", value: 2000 },
-//   { month: "Dec", value: 2100 },
-// ];
+// const formatCurrency = (value) =>
+//   new Intl.NumberFormat("en-IN", {
+//     style: "currency",
+//     currency: "USD",
+//     maximumSignificantDigits: 3,
+//   }).format(value);
 
-// const recentTransactionsData = [
-//   {
-//     id: 1,
-//     type: "Payment from Acme Corp",
-//     date: "Jan 15",
-//     category: "Invoice",
-//     amount: "+$12,450",
-//     trend: "positive",
-//   },
-//   {
-//     id: 2,
-//     type: "Office Supplies",
-//     date: "Jan 14",
-//     category: "Operations",
-//     amount: "-$890",
-//     trend: "negative",
-//   },
-// ];
+// const shortenId = (id) => `#${id.slice(-6).toUpperCase()}`;
 
+// // Dummy aggregation if revenueTrends is empty (UX Fallback)
+// const aggregateTransactionsToChart = (transactions = []) => {
+//   if (!transactions.length) return [];
+//   // Simple grouping by index for demo purposes since dates aren't in the ID
+//   // In a real app, you'd group by createdAt date
+//   return transactions.map((t, i) => ({
+//     name: `Tx ${i + 1}`,
+//     amount: t.amount,
+//     status: t.status,
+//   }));
+// };
+
+// /* -------------------- SUB-COMPONENTS -------------------- */
+
+// // 1. Skeleton Loader (Prevents Layout Shift)
+// const DashboardSkeleton = () => (
+//   <div className="animate-pulse space-y-6">
+//     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+//       {[...Array(4)].map((_, i) => (
+//         <div key={i} className="h-32 bg-gray-200 rounded-2xl"></div>
+//       ))}
+//     </div>
+//     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+//       <div className="lg:col-span-2 h-96 bg-gray-200 rounded-2xl"></div>
+//       <div className="h-96 bg-gray-200 rounded-2xl"></div>
+//     </div>
+//   </div>
+// );
+
+// // 2. Stat Card (Memoized)
+// const StatCard = memo(({ title, value, icon: Icon, trend, color }) => (
+//   <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300">
+//     <div className="flex items-start justify-between">
+//       <div>
+//         <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
+//         <h3 className="text-2xl font-bold text-gray-900 tracking-tight">
+//           {value}
+//         </h3>
+//       </div>
+//       <div className={`p-3 rounded-xl ${color}`}>
+//         <Icon className="w-6 h-6 text-white" />
+//       </div>
+//     </div>
+//     {trend && (
+//       <div className="mt-4 flex items-center text-sm">
+//         <span className="text-emerald-600 font-medium flex items-center bg-emerald-50 px-2 py-0.5 rounded-full">
+//           <ArrowTrendingUpIcon className="w-3 h-3 mr-1" />
+//           {trend}
+//         </span>
+//         <span className="text-gray-400 ml-2">vs last month</span>
+//       </div>
+//     )}
+//   </div>
+// ));
+
+// // 3. Custom Chart Tooltip
+// const CustomTooltip = ({ active, payload, label }) => {
+//   if (active && payload && payload.length) {
+//     return (
+//       <div className="bg-slate-800 text-white p-3 rounded-lg shadow-xl text-xs">
+//         <p className="font-semibold mb-1">{label}</p>
+//         <p className="text-emerald-400">
+//           Revenue: {formatCurrency(payload[0].value)}
+//         </p>
+//       </div>
+//     );
+//   }
+//   return null;
+// };
+
+// // 4. Transactions Table (Memoized)
+// const RecentTransactions = memo(({ transactions }) => (
+//   <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
+//     <div className="p-6 border-b border-gray-50 flex justify-between items-center">
+//       <h2 className="text-lg font-bold text-gray-800">Recent Transactions</h2>
+//       <button className="text-gray-400 hover:text-indigo-600">
+//         <EllipsisHorizontalIcon className="w-6 h-6" />
+//       </button>
+//     </div>
+//     <div className="overflow-x-auto flex-1">
+//       <table className="w-full text-left border-collapse">
+//         <thead className="bg-gray-50 text-xs uppercase text-gray-500 font-semibold tracking-wider">
+//           <tr>
+//             <th className="px-6 py-4">Client</th>
+//             <th className="px-6 py-4">Amount</th>
+//             <th className="px-6 py-4">Status</th>
+//             <th className="px-6 py-4 text-right">Action</th>
+//           </tr>
+//         </thead>
+//         <tbody className="divide-y divide-gray-50">
+//           {transactions?.map((t) => (
+//             <tr
+//               key={t._id}
+//               className="hover:bg-gray-50/50 transition-colors duration-200 group"
+//             >
+//               <td className="px-6 py-4">
+//                 <div className="flex items-center">
+//                   <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs mr-3">
+//                     TX
+//                   </div>
+//                   <span className="font-mono text-sm font-medium text-gray-700 group-hover:text-indigo-600 transition-colors">
+//                     {t.clientId?.clientName || "Unknown Client"}
+//                   </span>
+//                 </div>
+//               </td>
+//               <td className="px-6 py-4 text-sm font-semibold text-gray-900">
+//                 {formatCurrency(t.amount)}
+//               </td>
+//               <td className="px-6 py-4">
+//                 <span
+//                   className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+//                     t.status === "paid"
+//                       ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+//                       : "bg-amber-100 text-amber-800 border border-amber-200"
+//                   }`}
+//                 >
+//                   <span
+//                     className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+//                       t.status === "paid" ? "bg-emerald-500" : "bg-amber-500"
+//                     }`}
+//                   ></span>
+//                   {t.status}
+//                 </span>
+//               </td>
+//               <td className="px-6 py-4 text-right">
+//                 <button className="text-gray-400 hover:text-gray-600 text-xs font-medium">
+//                   View
+//                 </button>
+//               </td>
+//             </tr>
+//           ))}
+//         </tbody>
+//       </table>
+//     </div>
+//   </div>
+// ));
+
+// /* -------------------- MAIN DASHBOARD -------------------- */
 // const Dashboard = () => {
+//   const [data, setData] = useState(null);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(false);
+
+//   useEffect(() => {
+//     let mounted = true;
+//     const loadDashboard = async () => {
+//       try {
+//         const res = await getDashboardStats();
+//         if (mounted) {
+//           setData(res.data);
+//           setLoading(false);
+          
+//         }
+//       } catch (err) {
+//         console.error("Dashboard API error:", err);
+//         if (mounted) {
+//           setError(true);
+//           setLoading(false);
+//         }
+//       }
+//     };
+//     loadDashboard();
+//     return () => (mounted = false);
+//   }, []);
+
+//   // Memoize Stats to avoid recalculation on unrelated renders
+//   const stats = useMemo(() => {
+//     if (!data?.KPIs) return [];
+//     const { totalRevenue, paid, pending, outstanding } = data.KPIs;
+//     return [
+//       {
+//         title: "Total Revenue",
+//         value: formatCurrency(totalRevenue),
+//         icon: CurrencyDollarIcon,
+//         color: "bg-indigo-500",
+//         trend: "12%",
+//       },
+//       {
+//         title: "Invoices Sent",
+//         value: (paid || 0) + (pending || 0),
+//         icon: DocumentTextIcon,
+//         color: "bg-blue-500",
+//         trend: null,
+//       },
+//       {
+//         title: "Paid Invoices",
+//         value: paid || 0,
+//         icon: CheckCircleIcon,
+//         color: "bg-emerald-500",
+//         trend: "5%",
+//       },
+//       {
+//         title: "Pending Invoices",
+//         value: pending || 0,
+//         icon: ClockIcon,
+//         color: "bg-amber-500",
+//         trend: null,
+//       },
+//     ];
+//   }, [data]);
+
+//   // Memoize Chart Data
+//   const chartData = useMemo(() => {
+//     if (!data) return [];
+//     // Fallback: If revenueTrends is empty, generate visual data from transactions
+//     if (!data.revenueTrends || data.revenueTrends.length === 0) {
+//       return aggregateTransactionsToChart(data.recentTransactions);
+//     }
+//     return data.revenueTrends;
+//   }, [data]);
+
+//   // Memoize Pie Data
+//   const pieData = useMemo(() => {
+//     if (!data?.KPIs) return [];
+//     return [
+//       { name: "Paid", value: data.KPIs.paid || 0 },
+//       { name: "Pending", value: data.KPIs.pending || 0 },
+//     ];
+//   }, [data]);
+
+//   if (loading)
+//     return (
+//       <Layout>
+//         <DashboardSkeleton />
+//       </Layout>
+//     );
+
+//   if (error)
+//     return (
+//       <Layout>
+//         <div className="text-center py-20 text-red-500">
+//           Failed to load dashboard data.
+//         </div>
+//       </Layout>
+//     );
+
 //   return (
 //     <Layout>
-//       {/* Top Tabs Placeholder */}
-//       <div className="bg-white shadow-sm rounded-md mb-24"></div>
-//       {/* Stat Cards */}
-//       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8 cursor-pointer ">
-//   {statsData.map((s, idx) => (
-//     <div
-//   key={idx}
-//   className="transition-transform duration-200 hover:scale-105 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-[2.5px]"
-// >
-//   <div className="bg-white rounded-xl">
-//     <StatCard
-//       title={s.title}
-//       value={s.value}
-//       percentage={s.percentage}
-//       icon={s.icon}
-//       colorClass={s.color}
-//       trendType={s.trend}
-//     />
-//   </div>
-// </div>
+//       <div className="space-y-6 animate-fade-in-up pt-10">
+//         {/* Header */}
+//         <div className="flex justify-between items-end">
+//           <div>
+//             <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+//             <p className="text-sm text-gray-500 mt-1">
+//               Welcome back, here is your financial overview.
+//             </p>
+//           </div>
+//           {/* <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
+//             Download Report
+//           </button> */}
+//         </div>
 
-//   ))}
-// </div>
+//         {/* KPI Grid */}
+//         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+//           {stats.map((stat, i) => (
+//             <StatCard key={i} {...stat} />
+//           ))}
+//         </div>
 
+//         {/* Charts Section */}
+//         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+//           {/* Main Trend Chart */}
+//           <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+//             <div className="flex justify-between items-center mb-6">
+//               <h2 className="text-lg font-bold text-gray-800">
+//                 Revenue Analytics
+//               </h2>
+//               <select className="text-sm border-gray-200 rounded-md text-gray-500 focus:ring-indigo-500 focus:border-indigo-500">
+//                 <option>This Week</option>
+//                 <option>Last Month</option>
+//               </select>
+//             </div>
+            
+//             <div className="h-[300px] w-full">
+//               <ResponsiveContainer width="100%" height="100%">
+//                 <AreaChart
+//                   data={chartData}
+//                   margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+//                 >
+//                   <defs>
+//                     <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+//                       <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+//                       <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+//                     </linearGradient>
+//                   </defs>
+//                   <CartesianGrid
+//                     strokeDasharray="3 3"
+//                     vertical={false}
+//                     stroke="#F3F4F6"
+//                   />
+//                   <XAxis
+//                     dataKey="name"
+//                     axisLine={false}
+//                     tickLine={false}
+//                     tick={{ fill: "#9CA3AF", fontSize: 12 }}
+//                     dy={10}
+//                   />
+//                   <YAxis
+//                     axisLine={false}
+//                     tickLine={false}
+//                     tick={{ fill: "#9CA3AF", fontSize: 12 }}
+//                     tickFormatter={(value) => `$${value / 1000}k`}
+//                   />
+//                   <Tooltip content={<CustomTooltip />} cursor={false} />
+//                   <Area
+//                     type="monotone"
+//                     dataKey="amount"
+//                     stroke="#6366f1"
+//                     strokeWidth={3}
+//                     fillOpacity={1}
+//                     fill="url(#colorRev)"
+//                     activeDot={{ r: 6, strokeWidth: 0 }}
+//                   />
+//                 </AreaChart>
+//               </ResponsiveContainer>
+//             </div>
+//           </div>
 
-//       {/* Revenue Trend & Recent Transactions */}
-//       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-//         {/* --- Vertical Bar Chart --- */}
-//         <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm ">
-//           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex justify-between items-center">
-//             Revenue Trend
-//             <span className="text-blue-500 text-xl">
-//               <TrendingUp />
-//             </span>
-//           </h2>
-
-//           <div className="w-full h-80 ">
-//             <ResponsiveContainer width="100%" height="100%">
-//               <BarChart
-//                 data={revenueTrendData}
-//                 margin={{ top: 20, right: 20, left: 0, bottom: 10 }}
-//               >
-//                 <CartesianGrid strokeDasharray="3 3" className="opacity-60" />
-//                 <XAxis dataKey="month" tick={{ fill: "#4B5563" }} />
-//                 <YAxis tick={{ fill: "#0EA5E9" }} />
-//                 <Tooltip
-//                   contentStyle={{
-//                     backgroundColor: "white",
-//                     borderRadius: "8px",
-//                     border: "6px solid #e5e7eb",
-//                   }}
-//                   cursor={{ fill: "#DBEAFE" }}
-//                 />
-//                 <Legend />
-//                 <Bar
-//                   dataKey="value"
-//                   fill="#60A5FA" // Tailwind orange-500
-//                   radius={[6, 6, 0, 0]}
-//                   barSize={20}
-//                 />
-//               </BarChart>
-//             </ResponsiveContainer>
+//           {/* Donut Chart (Status) */}
+//           <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
+//             <h2 className="text-lg font-bold text-gray-800 mb-2">
+//               Payment Status
+//             </h2>
+//             <div className="flex-1 min-h-[250px] relative">
+//               <ResponsiveContainer width="100%" height="100%">
+//                 <PieChart>
+//                   <Pie
+//                     data={pieData}
+//                     cx="50%"
+//                     cy="50%"
+//                     innerRadius={60}
+//                     outerRadius={80}
+//                     paddingAngle={5}
+//                     dataKey="value"
+//                   >
+//                     {pieData.map((entry, index) => (
+//                       <Cell
+//                         key={`cell-${index}`}
+//                         fill={COLORS[index % COLORS.length]}
+//                         strokeWidth={0}
+//                       />
+//                     ))}
+//                   </Pie>
+//                   <Tooltip />
+//                 </PieChart>
+//               </ResponsiveContainer>
+//               {/* Center Text in Donut */}
+//               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+//                 <span className="text-3xl font-bold text-gray-800">
+//                   {data?.KPIs?.paid + data?.KPIs?.pending}
+//                 </span>
+//                 <span className="text-xs text-gray-400 uppercase tracking-wider">
+//                   Total
+//                 </span>
+//               </div>
+//             </div>
+            
+//             {/* Legend */}
+//             <div className="flex justify-center space-x-6 mt-4">
+//               <div className="flex items-center">
+//                 <div className="w-3 h-3 rounded-full bg-emerald-500 mr-2"></div>
+//                 <span className="text-sm text-gray-600">Paid</span>
+//               </div>
+//               <div className="flex items-center">
+//                 <div className="w-3 h-3 rounded-full bg-amber-500 mr-2"></div>
+//                 <span className="text-sm text-gray-600">Pending</span>
+//               </div>
+//             </div>
 //           </div>
 //         </div>
 
-//         {/* --- Recent Transactions --- */}
-//         <div className="bg-white p-6 rounded-lg shadow-sm cursor-pointer">
-//           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex justify-between items-center">
-//             Recent Transactions
-//             <button className="text-sm text-gray-600 font-medium hover:text-gray-800">
-//               View All
-//             </button>
-//           </h2>
-//           <div className="divide-y divide-gray-100">
-//             {recentTransactionsData.map((tr) => (
-//               <div
-//                 key={tr.id}
-//                 className="flex justify-between items-center py-4 first:pt-0 last:pb-0"
-//               >
-//                 <div>
-//                   <p className="font-medium text-gray-900">{tr.type}</p>
-//                   <p className="text-xs text-gray-500">
-//                     {tr.date} · {tr.category}
-//                   </p>
-//                 </div>
-//                 <p
-//                   className={`font-semibold text-sm ${
-//                     tr.trend === "positive" ? "text-green-600" : "text-red-600"
-//                   }`}
-//                 >
-//                   {tr.amount}
-//                 </p>
-//               </div>
-//             ))}
-//           </div>
+//         {/* Transactions Table */}
+//         <div className="min-h-[300px]">
+//           <RecentTransactions transactions={data?.recentTransactions} />
 //         </div>
 //       </div>
 //     </Layout>
@@ -684,3 +912,4 @@ export default Dashboard;
 // };
 
 // export default Dashboard;
+

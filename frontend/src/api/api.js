@@ -20,7 +20,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// 🚨 RESPONSE: handle auth errors
+// RESPONSE: handle auth errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -34,4 +34,6 @@ api.interceptors.response.use(
  export const signupapi = (data) => api.post("/auth/signup", data); 
  // Login API 
 export const loginapi = (data) => api.post("/auth/login", data);
+
+export const setPasswordApi = (data) => api.post("/auth/set-password", data);
  export default api;

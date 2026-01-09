@@ -39,6 +39,7 @@ const getDashboardData = async (req, res) => {
     ]);
 
     const recentTransactions = await Invoice.find(filter)
+    .populate("clientId", "clientName")
       .sort({ [sortField]: sortOrder === "desc" ? -1 : 1 })
       .limit(Number(limit))
       .select("clientId amount status date");

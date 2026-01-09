@@ -11,9 +11,26 @@ const sendEmail = require("../utils/sendEmail");
 //create
 router.post("/",protect,allow("createInvoice"),async (req, res) => {
     try {
-      
+      console.log("Request Body:", req.body);
+      const normalizedEmail = req.body.email?.toLowerCase().trim();
+
+    //  Block duplicate client BEFORE saving
+    if (normalizedEmail) {
+      const existingClient = await Client.findOne({
+        email: normalizedEmail,
+        organizationId: req.user.organizationId,
+        deletedAt: null,
+      });
+
+      if (existingClient) {
+        return res.status(409).json({
+          message: "A client with this email already exists",
+        });
+      }
+    }
       const client = new Client({
         ...req.body,
+        email: normalizedEmail,
         organizationId: req.user.organizationId,
         invoicePrefix: (req.body.invoicePrefix || "INV").toUpperCase(),
       });
@@ -36,12 +53,12 @@ router.post("/",protect,allow("createInvoice"),async (req, res) => {
             companyName: req.user.companyName,
             fullName: client.clientName || "Client User",
             email: normalizedEmail,
-            role: "Finance", // Client access role
+            role: req.body.role || "Finance", 
             passwordSet: false,
           });
 
           await user.save();
-
+console.log("New User Created:", user);
           inviteStatus = "sent";
         }
 
@@ -112,20 +129,52 @@ router.post("/",protect,allow("createInvoice"),async (req, res) => {
 // get 
 router.get("/", protect, async (req, res) => {
   try {
-    const filters = {
+    const matchStage = {
       organizationId: req.user.organizationId,
       deletedAt: null,
     };
-    if (req.query.country) filters.country = req.query.country;
-    if (req.query.state) filters.state = req.query.state;
-    const clients = await Client.find(filters).sort({ createdAt: -1 });
+
+    if (req.query.country) matchStage.country = req.query.country;
+    if (req.query.state) matchStage.state = req.query.state;
+
+    const clients = await Client.aggregate([
+      { $match: matchStage },
+
+      {
+        $lookup: {
+          from: "users",           
+          localField: "email",
+          foreignField: "email",
+          as: "userInfo",
+        },
+      },
+
+      {
+        $addFields: {
+          role: {
+            $ifNull: [{ $arrayElemAt: ["$userInfo.role", 0] }, "Client"],
+          },
+        },
+      },
+
+      {
+        $project: {
+          userInfo: 0, 
+        },
+      },
+
+      { $sort: { createdAt: -1 } },
+    ]);
+
     res.json(clients);
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error fetching clients", error: err.message });
+    res.status(500).json({
+      message: "Error fetching clients",
+      error: err.message,
+    });
   }
 });
+
 // update invoice
 router.put("/:id",protect,allow("editInvoice"),async (req, res) => {
     try {

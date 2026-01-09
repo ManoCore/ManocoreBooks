@@ -8,11 +8,14 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, lowercase: true, trim: true, unique: true },
     password: { type: String, minlength: 8 },
     passwordSet: { type: Boolean, default: false },
+
     phone: { type: String,  trim: true },
     acceptedTerms: {type: Boolean,default: false},
-    role: { type: String,enum: ["Admin", "Manager", "Finance"],default: "Admin",required: true,
+    role: { type: String,enum: ["Admin", "Manager", "Finance","Client"],default: "Admin",required: true,
     timezone: { type: String, default: "Asia/Kolkata" },
     language: { type: String, default: "en" },
+     resetPasswordToken: String,
+    resetPasswordExpire: Date,
     notificationPreferences: {
     email: { type: Boolean, default: true },
     inApp: { type: Boolean, default: true }

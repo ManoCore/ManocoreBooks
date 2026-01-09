@@ -7,9 +7,11 @@ import {
 } from "lucide-react";
 import ConfirmModal from "../components/ConfirmModal";
 import { toast } from "react-hot-toast"; 
+import {useSelector} from "react-redux";
 import { 
   createClient, 
-  fetchClients, 
+  fetchClients,
+  updateClient, 
   deleteClient, 
   exportClientsCSV, 
   exportClientsPDF 
@@ -27,12 +29,16 @@ const countries = [
 const paymentMethods = ["Bank Transfer", "Stripe", "Razorpay", "PayPal", "Cash"];
 
 const Clients = () => {
+
+  const isAdmin = useSelector(state => state.auth.user?.role === 'Admin');
   // --- State ---
   const [activeTab, setActiveTab] = useState("all");
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingClient, setEditingClient] = useState(null);
+  
   
   // Delete States
   const [showConfirm, setShowConfirm] = useState(false);
@@ -50,9 +56,11 @@ const Clients = () => {
     state: "", 
     zip: "", 
     taxId: "", 
-    currency: "", // Will be auto-set by country
+    currency: "",
     paymentPref: "", 
+     role: "Client",
     invoicePrefix: "INV",
+
     bankDetails: {}
   };
   const [formData, setFormData] = useState(initialForm);
@@ -63,6 +71,7 @@ const Clients = () => {
       setLoading(true);
       const res = await fetchClients();
       setClients(res.data);
+      console.log("res from clietns:", res);
     } catch (err) {
       toast.error("Failed to load clients");
     } finally {
@@ -102,50 +111,72 @@ const Clients = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.name || !formData.country) {
-      toast.error("Client name and country are required");
-      return;
-    }
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    setIsSubmitting(true);
-    try {
-      // Map UI form data to API Payload
-      const payload = {
-        clientName: formData.name, // Mapping 'name' to 'clientName' for backend
-        email: formData.email,
-        phone: formData.phone,
-        country: formData.country,
-        state: formData.state,
-        zip: formData.zip,
-        address: formData.address,
-        taxId: formData.taxId,
-        currency: formData.currency,
-        businessType: formData.type,
-        paymentPref: formData.paymentPref,
-        invoicePrefix: formData.invoicePrefix,
-        bankDetails: formData.bankDetails,
-      };
+  // Basic validation
+  if (!formData.name || !formData.country) {
+    toast.error("Client name and country are required");
+    return;
+  }
 
+  setIsSubmitting(true);
+
+  try {
+    //  UI → Backend payload mapping
+    const payload = {
+      clientName: formData.name,
+      email: formData.email || undefined,
+      phone: formData.phone || undefined,
+      country: formData.country,
+      state: formData.state || undefined,
+      zip: formData.zip || undefined,
+      address: formData.address || undefined,
+      taxId: formData.taxId || undefined,
+      currency: formData.currency || undefined,
+      businessType: formData.type,
+      paymentPref: formData.paymentPref || undefined,
+      invoicePrefix: formData.invoicePrefix,
+      bankDetails: formData.bankDetails || {},
+      role: formData.role || "Client", 
+    };
+
+    // EDIT MODE
+    if (editingClient) {
+      await updateClient(editingClient._id, payload);
+
+      toast.success("Client updated successfully");
+
+      setEditingClient(null); // reset edit mode
+    } 
+    // CREATE MODE
+    else {
       const res = await createClient(payload);
-      
-      if (res.data.inviteStatus === "sent") {
-        toast.success("Client created & invite sent!");
+
+      if (res?.data?.inviteStatus === "sent") {
+        toast.success("Client created & invite sent");
+      } else if (res?.data?.inviteStatus === "already_active") {
+        toast.success("Client created (portal already active)");
       } else {
         toast.success("Client created successfully");
       }
-
-      setFormData(initialForm);
-      setActiveTab("all");
-      loadClients(); // Refresh list to show new client
-    } catch (err) {
-      console.error(err);
-      toast.error(err.response?.data?.message || "Error creating client");
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+
+    //  Reset UI
+    setFormData(initialForm);
+    setActiveTab("all");
+    await loadClients();
+  } catch (err) {
+    console.error("Client save error:", err);
+
+    toast.error(
+      err?.response?.data?.message || "Something went wrong while saving client"
+    );
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   const handleDeleteClick = (id) => {
     setSelectedClientId(id);
@@ -167,6 +198,29 @@ const Clients = () => {
       setSelectedClientId(null);
     }
   };
+  const handleEdit = (client) => {
+  setEditingClient(client);
+
+  setFormData({
+    name: client.clientName || "",
+    type: client.businessType || "Company",
+    email: client.email || "",
+    phone: client.phone || "",
+    address: client.address || "",
+    country: client.country || "",
+    state: client.state || "",
+    zip: client.zip || "",
+    taxId: client.taxId || "",
+    currency: client.currency || "",
+    paymentPref: client.paymentPref || "",
+    invoicePrefix: client.invoicePrefix || "INV",
+    role: client.role || "Client",
+    bankDetails: client.bankDetails || {},
+  });
+
+  setActiveTab("add"); 
+};
+
 
   const handleExport = async (type) => {
     try {
@@ -275,33 +329,68 @@ const Clients = () => {
              <button onClick={() => handleExport('csv')} className="p-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all text-gray-600 flex items-center gap-2 text-sm font-medium">
                 <FileText size={18} /> Export CSV
              </button>
-             <button onClick={() => setActiveTab("add")} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg transition-all flex items-center gap-2 shadow-sm text-sm font-semibold">
+             {isAdmin && <button onClick={() => setActiveTab("add")} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg transition-all flex items-center gap-2 shadow-sm text-sm font-semibold">
                 <UserPlus size={18} /> New Client
-             </button>
+             </button>}
           </div>
         </div>
 
         {/* --- Sub-Tabs Navigation --- */}
         <div className="flex border-b border-gray-200 gap-8 px-4 md:px-0 overflow-x-auto">
-          {["all", "add", "import"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`pb-4 text-sm font-semibold capitalize transition-all relative ${
-                activeTab === tab ? "text-blue-600" : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {tab === "all" ? (
-                <span className="flex items-center gap-2"><Users size={18}/> Directory</span>
-              ) : tab === "add" ? (
-                <span className="flex items-center gap-2"><UserPlus size={18}/> Add Client</span>
-              ) : (
-                <span className="flex items-center gap-2"><UploadCloud size={18}/> Import</span>
-              )}
-              {activeTab === tab && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 rounded-full" />}
-            </button>
-          ))}
-        </div>
+  {/* Directory - always visible */}
+  <button
+    onClick={() => setActiveTab("all")}
+    className={`pb-4 text-sm font-semibold transition-all relative ${
+      activeTab === "all"
+        ? "text-blue-600"
+        : "text-gray-500 hover:text-gray-700"
+    }`}
+  >
+    <span className="flex items-center gap-2">
+      <Users size={18} /> Directory
+    </span>
+    {activeTab === "all" && (
+      <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 rounded-full" />
+    )}
+  </button>
+
+  {/* Add Client - ADMIN ONLY */}
+  {isAdmin && (
+    <button
+      onClick={() => setActiveTab("add")}
+      className={`pb-4 text-sm font-semibold transition-all relative ${
+        activeTab === "add"
+          ? "text-blue-600"
+          : "text-gray-500 hover:text-gray-700"
+      }`}
+    >
+      <span className="flex items-center gap-2">
+        <UserPlus size={18} /> Add Client
+      </span>
+      {activeTab === "add" && (
+        <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 rounded-full" />
+      )}
+    </button>
+  )}
+
+  {/* Import - optional (you can also restrict this later) */}
+  <button
+    onClick={() => setActiveTab("import")}
+    className={`pb-4 text-sm font-semibold transition-all relative ${
+      activeTab === "import"
+        ? "text-blue-600"
+        : "text-gray-500 hover:text-gray-700"
+    }`}
+  >
+    <span className="flex items-center gap-2">
+      <UploadCloud size={18} /> Import
+    </span>
+    {activeTab === "import" && (
+      <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 rounded-full" />
+    )}
+  </button>
+</div>
+
 
         {/* --- TAB CONTENT: ALL CLIENTS --- */}
         {activeTab === "all" && (
@@ -328,7 +417,7 @@ const Clients = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    {["Client Name", "Contact", "Location", "Type", "Status", "Actions"].map((head, i) => (
+                    {["Client Name", "Contact", "Location", "Role", "Status", "Actions"].map((head, i) => (
                       <th key={head} className={`px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider ${i === 5 ? "text-right" : ""}`}>{head}</th>
                     ))}
                   </tr>
@@ -361,7 +450,7 @@ const Clients = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${client.businessType === 'Company' ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-orange-50 text-orange-600 border-orange-100'}`}>
-                            {client.businessType}
+                            {client.role}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -370,10 +459,10 @@ const Clients = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                             <button className="p-2 hover:bg-white hover:shadow-sm rounded-lg text-gray-400 hover:text-blue-600 transition-all"><Edit3 size={16}/></button>
+                         {isAdmin && <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                             <button className="p-2 hover:bg-white hover:shadow-sm rounded-lg text-gray-400 hover:text-blue-600 transition-all" onClick={() => handleEdit(client)}><Edit3 size={16}/></button>
                              <button onClick={() => handleDeleteClick(client._id)} className="p-2 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-600 transition-all"><Trash2 size={16}/></button>
-                          </div>
+                          </div>}
                         </td>
                       </tr>
                     ))
@@ -428,6 +517,24 @@ const Clients = () => {
                         <option value="Individual">Individual</option>
                       </select>
                     </div>
+                    <div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Portal Role
+  </label>
+  <select
+    name="role"
+    value={formData.role}
+    onChange={handleInputChange}
+    className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+  >
+    <option value="Client">Client</option>
+    <option value="Manager">Manager</option>
+    <option value="Finance">Finance</option>
+  </select>
+  <p className="text-[11px] text-gray-400 mt-1">
+    Role applies only if portal access is enabled.
+  </p>
+</div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Tax ID / VAT / GST</label>

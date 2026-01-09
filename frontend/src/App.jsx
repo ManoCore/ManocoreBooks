@@ -11,6 +11,7 @@ import BankAccountPage from "./pages/BankAccount";
 import IntegrationsPage from "./pages/Integration";
 import Settings from "./pages/Settings"
 import SignupPage from "./pages/SignupPage";
+import SetPassword from "./pages/SetPassword";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 import {Toaster} from "react-hot-toast";
@@ -32,6 +33,7 @@ const App = () => (
     <Route path="/" element={<LandingPage />} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/signup" element={<SignupPage />} />
+    <Route path="/set-password" element={<SetPassword />} />
 
     {/* PROTECTED */}
     <Route element={<ProtectedRoute />}>

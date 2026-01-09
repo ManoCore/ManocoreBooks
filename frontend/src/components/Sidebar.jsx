@@ -10,10 +10,12 @@ import {
 } from "@heroicons/react/24/outline";
 import { GrIntegration } from "react-icons/gr";
 import { SlSettings } from "react-icons/sl";
+import { useSelector } from "react-redux";
 
 const Sidebar = () => {
+  const isAdmin = useSelector(state => state.auth.user?.role === 'Admin');
   const items = [
-    { name: "Dashboard", to: "/", icon: Squares2X2Icon },
+    { name: "Dashboard", to: "/dashboard", icon: Squares2X2Icon },
     { name: "Invoices", to: "/invoices", icon: DocumentTextIcon },
 
     // ✅ Newly added Clients button
@@ -21,9 +23,14 @@ const Sidebar = () => {
 
     { name: "Finance", to: "/finance", icon: CurrencyDollarIcon },
     { name: "Reports", to: "/reports", icon: ChartBarIcon },
-    { name: "Bank Account", to: "/bank-account", icon: BanknotesIcon },
-    { name: "Integration", to:"/integration", icon: GrIntegration},
-    { name: "Settings" , to:"/settings" , icon: SlSettings},
+    
+    ...(isAdmin
+    ? [
+      { name: "Bank Account", to: "/bank-account", icon: BanknotesIcon },
+        { name: "Integration", to: "/integration", icon: GrIntegration },
+        { name: "Settings", to: "/settings", icon: SlSettings },
+      ]
+    : []),
   ];
 
   return (

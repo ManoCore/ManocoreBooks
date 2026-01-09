@@ -18,26 +18,70 @@ import {
 import { FiPlusCircle, FiSend } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../features/auth/authSlice";
+import {toast}  from "react-hot-toast";
+import { getProfile, updateProfile} from "../api/profile.api";
 
-// ✅ Fix your image imports (Ensure these paths are correct in your project)
+// Fix your image imports (Ensure these paths are correct in your project)
 import manocoreBooksLogo from "../assets/manocore_books_logo_final_without_bg.png.png";
 import manocorelogo from "../assets/manocore_ai_logo1.png";
 
 // --- PROFILE SETTINGS MODAL COMPONENT ---
 const ProfileSettingsModal = ({ isOpen, onClose }) => {
+  const user=useSelector((state) => state.auth.user);
   const [activeTab, setActiveTab] = useState("account");
 
   // Mock States for Form Handling
-  const [formData, setFormData] = useState({
-    name: "Gladson",
-    email: "gladsonm934@gmail.com",
-    currentPassword: "",
-    newPassword: "",
-    timezone: "IST (UTC+05:30)",
-    language: "English (US)",
-    emailNotifs: true,
-    pushNotifs: false,
-  });
+ const [formData, setFormData] = useState({
+  name: "",
+  email: "",
+  currentPassword: "",
+  newPassword: "",
+  timezone: "",
+  language: "",
+  emailNotifs: true,
+  pushNotifs: false,
+});
+
+useEffect(() => {
+  if (user) {
+    setFormData((prev) => ({
+      ...prev,
+      name: user.fullName || "",
+      email: user.email || "",
+      timezone: user.timezone || "IST (UTC+05:30)",
+      language: user.language || "English (US)",
+      emailNotifs: user.emailNotifs ?? true,
+      pushNotifs: user.pushNotifs ?? false,
+    }));
+  }
+}, [user, isOpen]);
+
+useEffect(() => {
+  if (!isOpen) return;
+
+  const loadProfile = async () => {
+    try {
+      const res = await getProfile();
+      const u = res.data.user;
+
+      setFormData({
+        name: u.fullName || "",
+        email: u.email || "",
+        currentPassword: "",
+        newPassword: "",
+        timezone: u.timezone || "IST (UTC+05:30)",
+        language: u.language || "English (US)",
+        emailNotifs: u.notificationPreferences?.email ?? true,
+        pushNotifs: u.notificationPreferences?.inApp ?? false,
+      });
+    } catch (err) {
+      toast.error("Failed to load profile");
+    }
+  };
+
+  loadProfile();
+}, [isOpen]);
+
 
   // Handle Input Changes
   const handleChange = (e) => {
@@ -47,6 +91,27 @@ const ProfileSettingsModal = ({ isOpen, onClose }) => {
       [name]: type === "checkbox" ? checked : value,
     }));
   };
+
+
+
+  const handleSave = async () => {
+  try {
+    await updateProfile({
+      fullName: formData.name,
+      timezone: formData.timezone,
+      language: formData.language,
+      notificationPreferences: {
+        email: formData.emailNotifs,
+        inApp: formData.pushNotifs,
+      },
+    });
+
+    toast.success("Profile updated successfully");
+    onClose();
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Update failed");
+  }
+};
 
   if (!isOpen) return null;
 
@@ -296,7 +361,7 @@ const ProfileSettingsModal = ({ isOpen, onClose }) => {
         </button>
 
         <button
-          onClick={() => { alert("Settings Saved!"); onClose(); }}
+          onClick={handleSave}
           className="px-5 py-2 bg-linear-to-br from-purple-600 via-blue-500 to-indigo-600 text-black rounded-lg font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
         >
           Save Changes

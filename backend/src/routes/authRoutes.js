@@ -205,54 +205,54 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.post("/send-set-password-link", async (req, res) => {
-  try {
-    const { email } = req.body;
+// router.post("/send-set-password-link", async (req, res) => {
+//   try {
+//     const { email } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
-    }
+//     if (!email) {
+//       return res.status(400).json({ message: "Email is required" });
+//     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
+//     const user = await User.findOne({ email: email.toLowerCase().trim() });
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    if (user.password) {
-  return res.status(400).json({
-    message: "Password is already set for this email"
-  });
-}
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+//     if (user.password) {
+//   return res.status(400).json({
+//     message: "Password is already set for this email"
+//   });
+// }
 
-    const token = jwt.sign(
-      { userId: user._id, purpose: "set-password" },
-      process.env.JWT_SECRET,
-      { expiresIn: "30m" } 
-    );
+//     const token = jwt.sign(
+//       { userId: user._id, purpose: "set-password" },
+//       process.env.JWT_SECRET,
+//       { expiresIn: "30m" } 
+//     );
 
-    const setupLink = `${process.env.FRONTEND_URL}/set-password?token=${token}`;
+//     const setupLink = `${process.env.FRONTEND_URL}/set-password?token=${token}`;
 
-    await sendEmail({
-      email: user.email,
-      subject: "Set up your Manocore Books Account",
-      message: `
-        <p>Hello ${user.fullName},</p>
-        <p>You have been invited to Manocore Books.</p>
-        <p>Please click the link below to set your password:</p>
-        <p><a href="${setupLink}">Set Password</a></p>
-        <p>This link will expire in 30 minutes.</p>
-      `,
-    });
+//     await sendEmail({
+//       email: user.email,
+//       subject: "Set up your Manocore Books Account",
+//       message: `
+//         <p>Hello ${user.fullName},</p>
+//         <p>You have been invited to Manocore Books.</p>
+//         <p>Please click the link below to set your password:</p>
+//         <p><a href="${setupLink}">Set Password</a></p>
+//         <p>This link will expire in 30 minutes.</p>
+//       `,
+//     });
 
-    res.status(200).json({
-      success: true,
-      message: "Password setup link sent successfully",
-    });
-  } catch (error) {
-    console.error("Send Set Password Link Error:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-});
+//     res.status(200).json({
+//       success: true,
+//       message: "Password setup link sent successfully",
+//     });
+//   } catch (error) {
+//     console.error("Send Set Password Link Error:", error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
 
 router.post("/set-password", async (req, res) => {
   try {
@@ -288,8 +288,17 @@ router.post("/set-password", async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    if (user.passwordSet) {
+      return res
+        .status(400)
+        .json({ message: "Password already set" });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
+
     user.password = hashedPassword;
+    user.passwordSet = true;
+    user.acceptedTerms = true;
 
     await user.save();
 
@@ -302,6 +311,7 @@ router.post("/set-password", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
 
 
 module.exports = router;

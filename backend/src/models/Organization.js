@@ -8,7 +8,8 @@ const organizationSchema = new mongoose.Schema({
   timezone: { type: String, required: true },
   taxId: { type: String },
   businessType: { type: String, required: true },
-  invoicePrefix: { type: String, default: null }
+  invoicePrefix: { type: String, default: null },
+  logo: { type: String, default: null },
 }, { timestamps: true });
 
 module.exports = mongoose.model("Organization", organizationSchema);
